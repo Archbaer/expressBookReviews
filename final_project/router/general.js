@@ -8,19 +8,18 @@ let booksArray = Object.values(books);
 
 // Register new users
 public_users.post("/register", (req,res) => {
-  
   const username = req.body.username;
   const password = req.body.password;
 
-  if(username && password) {
-    
+  if (username && password) {
     if(!isValid(username)) {
-      users.push({"username": username, "password": password});
+      users.push({ username, password });
+      console.log(users)
       return res.status(203).json({ message: "User successfully registered. Now you can login" });
     } else {
       return res.status(404).json({ message: "User already exists!" });
     }
-  }
+  } 
 
   return res.status(404).json({ message: "Unable to register user." });
 });

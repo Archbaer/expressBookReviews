@@ -5,24 +5,25 @@ const customer_routes = require('./router/auth_users.js').authenticated;
 const genl_routes = require('./router/general.js').general;
 
 const app = express();
-
 app.use(express.json());
 
-app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
+app.use("/customer",session({secret:"fingerprint_customer",resave: false, saveUninitialized: false, cookie: { secure: false }}));
 
-app.use("/customer/auth/*", function auth(req,res,next){
-    const token = req.headers['authorization']?.split(' ')[1];
+app.use("/customer/auth/*", function auth(req,res,next){  
+    if(req.session && req.session.authorization) {
+        let token = req.session.authorization['accessToken'];
 
-    if(!token) {
-        return res.status(403).json({ message: "Access denied. No token provided." });
-    }
-
-    try {
-        const decoded = jwt.verify(token, "fingerprint_customer");
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ message: "Invalid token." });
+        jwt.verify(token, "fingerprint_customer", (err, user) => {
+            if(!err) {
+                req.user = user;
+                next();
+            } else {
+                console.log(err.message)
+                return res.status(403).json({ message: "User not authenticated" });
+            }
+        });
+    } else {
+        return res.status(403).json({ message: "User not logged in" });
     }
 });
  
